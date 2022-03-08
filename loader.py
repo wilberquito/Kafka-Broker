@@ -1,40 +1,47 @@
 from configparser import ConfigParser
 
 
-def db_config(filename='settings.ini', defaults_section='defaults'):
-    """Rescues database configuration from settings file"""
-
+def config(filename='settings.ini', defaults_section='defaults'):
     # create a parser
     parser = ConfigParser()
     # read config file
     parser.read(filename)
 
-    # get section, default to postgresql
-    db = {}
     defaults = {}
 
     if parser.has_section(defaults_section):
         params = parser.items(defaults_section)
-        for [k, v] in params:
-            defaults[k] = v
+        # checking if all default configurations appears in file
+        for [k, section] in params:
+            defaults[k] = section
+            if (not parser.has_section(section)):
+                raise Exception(
+                    f"Defualt section '{section}' not found in '{filename}' file")
+
     else:
         raise Exception(
             f"Default section not in configuration'{filename}' file")
 
-    if ('database' not in defaults):
-        raise Exception('No configuration for database found')
+    return (parser, defaults)
 
-    section = defaults['database']
 
-    if parser.has_section(section):
-        params = parser.items(section)
+def db_config(parser, database_section='database'):
+    """Rescues database configuration from settings file"""
+
+    # get section, default to postgresql
+    db = {}
+
+    if parser.has_section(database_section):
+        params = parser.items(database_section)
         for [k, v] in params:
             db[k] = v
     else:
         raise Exception(
-            'Section {0} not found in the {1} file'.format(section, filename))
+            'Section {0} not found'.format(database_section))
 
     return db
 
 
-print(db_config())
+parser, defaults = config()
+db = db_config(parser, defaults['database'])
+print(db)
