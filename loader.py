@@ -32,8 +32,9 @@ def config(filename):
 
     return (parser, defaults)
 
-
 # %%
+
+
 def db_config(parser, database_section):
     """Rescues database configuration from settings file"""
 
@@ -50,8 +51,9 @@ def db_config(parser, database_section):
 
     return config
 
-
 # %%
+
+
 def connect_str(params, database_name):
     """ Connect to configured database """
 
@@ -76,17 +78,30 @@ def is_development_env(parser):
             False
     return True
 
+# %%
+
+
+def sql_query(parser):
+    if parser.has_section(const.QUERY_SECTION):
+        params = dict(parser.items(const.QUERY_SECTION))
+        if const.SQL_CONF in params:
+            return params[const.SQL_CONF]
+        else:
+            raise Exception('sql not defined in query section')
+    else:
+        raise Exception('query section not defined in settings file')
 
 # %%
+
+
 parser, defaults = config(const.CONFIG_FILE)
 db_name = defaults[const.DATABASE_CONF]
 
-
-# %% [markdown]
-# Connecting to remote database
-
 # %%
+
 conn = None
+
+sql = sql_query(parser)
 
 # get database section configuration using db name & file parsed
 params = db_config(parser, db_name)
@@ -95,13 +110,12 @@ db_str = connect_str(params, db_name)
 # create connection
 cnx = create_engine(db_str)
 
-df = pd.read_sql_query('''SELECT * FROM contenidors_fcc_out''', con=cnx)
+df = pd.read_sql_query(sql, con=cnx)
 
 # %%
 to_send = df.to_json(orient='records')
 parsed = json.loads(to_send)
 json_string = json.dumps(parsed, indent=4)
-
 
 if is_development_env(parser):
     with open('json_data.json', 'w') as out:
