@@ -5,6 +5,9 @@ CONFIG_FILE = 'settings.ini'
 # defaults configuration  section
 DEFAULT_SECTION = 'defaults'
 # database configuration section
-DATABASE_SECTION = 'database'
+DATABASE_CONF = 'database'
+# develop conf
+ENVIRONMENT_SECTION = 'environment'
+DEVELOP_CONF = 'develop'
 # database
 POSTGRE = 'postgresql'

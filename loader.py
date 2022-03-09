@@ -1,10 +1,15 @@
+# %%
 from configparser import ConfigParser
-import psycopg2
+from sqlalchemy import create_engine
+import pandas as pd
+import json
 
 import constants as const
 
+# %%
 
-def config(filename, defaults_section):
+
+def config(filename):
     # create a parser
     parser = ConfigParser()
     # read config file
@@ -12,8 +17,8 @@ def config(filename, defaults_section):
 
     defaults = {}
 
-    if parser.has_section(defaults_section):
-        params = parser.items(defaults_section)
+    if parser.has_section(const.DEFAULT_SECTION):
+        params = parser.items(const.DEFAULT_SECTION)
         # checking if all default configurations appears in file
         for [k, section] in params:
             defaults[k] = section
@@ -28,60 +33,76 @@ def config(filename, defaults_section):
     return (parser, defaults)
 
 
+# %%
 def db_config(parser, database_section):
     """Rescues database configuration from settings file"""
 
     # get section, default to postgresql
-    db = {}
+    config = {}
 
     if parser.has_section(database_section):
         params = parser.items(database_section)
         for [k, v] in params:
-            db[k] = v
+            config[k] = v
     else:
         raise Exception(
             'Section {0} not found'.format(database_section))
 
-    return db
+    return config
 
 
-def connect(params, database_name):
+# %%
+def connect_str(params, database_name):
     """ Connect to configured database """
 
-    if database_name == const.POSTGRE:
-        conn = psycopg2.connect(**params)
+    if (database_name == const.POSTGRE):
+        return "postgresql://{username}:{password}@{ipaddress}:{port}/{dbname}".format(**params)
 
-    return conn
+# %%
 
 
+def is_development_env(parser):
+    """Tries to find default configuration
+
+        if it's not present returns true
+    """
+    if parser.has_section(const.ENVIRONMENT_SECTION):
+        params = parser.items(const.ENVIRONMENT_SECTION)
+        map = dict(params)
+        if const.DEVELOP_CONF in map:
+            return map[const.DEVELOP_CONF].lower() in ['true', '1', 't', 'y', 'yes',
+                                                       'yeah', 'yup', 'certainly', 'uh-huh']
+        else:
+            False
+    return True
+
+
+# %%
+parser, defaults = config(const.CONFIG_FILE)
+db_name = defaults[const.DATABASE_CONF]
+
+
+# %% [markdown]
+# Connecting to remote database
+
+# %%
 conn = None
 
-try:
-    # get file config parse & dict of default configuration
-    parser, defaults = config(const.CONFIG_FILE, const.DEFAULT_SECTION)
-    # get file name from default database configuration
-    db_name = defaults[const.DATABASE_SECTION]
-    # get database section configuration using db name & file parsed
-    params = db_config(parser, db_name)
-    # get a connection using a factory function
-    conn = connect(params, db_name)
+# get database section configuration using db name & file parsed
+params = db_config(parser, db_name)
+# get a connection using a factory function
+db_str = connect_str(params, db_name)
+# create connection
+cnx = create_engine(db_str)
 
-    cur = conn.cursor()
+df = pd.read_sql_query('''SELECT * FROM contenidors_fcc_out''', con=cnx)
 
-    db_version = cur.execute('SELECT version()')
-    db_version = cur.fetchone()
+# %%
+to_send = df.to_json(orient='records')
+parsed = json.loads(to_send)
+json_string = json.dumps(parsed, indent=4)
 
-    # display the PostgreSQL database server version
-    print(f'Database connection:\n {db_version}')
 
-    # close the communication with the PostgreSQL
-    cur.close()
-
-except (psycopg2.DatabaseError) as error:
-    print(f"Problem trying to connect to database - '{db_name}'")
-except (Exception) as error:
-    print(error)
-finally:
-    if conn is not None:
-        conn.close()
-        print('DB closed')
+if is_development_env(parser):
+    with open('json_data.json', 'w') as out:
+        out.write(json_string)
