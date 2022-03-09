@@ -1,8 +1,10 @@
+
 # %%
 from configparser import ConfigParser
 from sqlalchemy import create_engine
 import pandas as pd
 import json
+import time
 
 import constants as const
 
@@ -120,3 +122,25 @@ json_string = json.dumps(parsed, indent=4)
 if is_development_env(parser):
     with open('json_data.json', 'w') as out:
         out.write(json_string)
+
+# %%
+# loading data to datastructure
+raw_items = json.loads(json_string)
+
+result = []
+
+for raw_item in raw_items:
+    map = dict(raw_item)
+    localId = map.pop('gid')
+    item = {
+        'localId': localId,
+        'object': map
+    }
+    result.append(item)
+
+# %%
+for item in result:
+    print(item)
+    time.sleep(1)
+
+# %%
