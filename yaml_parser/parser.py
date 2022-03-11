@@ -16,11 +16,6 @@ class Parser:
     def executions(self) -> List:
         return self.__executions()
     
-    def random_delay(self) -> int:
-        ''' returns random delay to execute all process '''
-        defaults = self.__defaults()
-        return defaults.get('random_delay', 10)
-    
     def __parse(self) -> None:
         with open(self.file, 'r') as file:
             parsed = yaml.load(file, Loader=yaml.FullLoader)

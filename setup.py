@@ -10,6 +10,9 @@ setup(
     author_email='info@nexusgeograhics.com',
     description='Tool to load data from diferent sources to ihub consumer',
     install_requires=[
-        "pyyaml"
+        "pyyaml",
+        "SQLAlchemy",
+        "psycopg2",
+        "pandas"
     ]
 )

@@ -1,6 +1,5 @@
 default:
   dev: true
-  random_delay: 10 
   maxstart: 
   executions:
     - sf
@@ -11,9 +10,9 @@ executions:
   sf:
     url: postgresql://sf:sf@192.168.0.45:5432/sf
     sql: SELECT * FROM contenidors_fcc_out
-    period: 5
+    period: 1
 
   local:
     url: postgresql://sf:sf@192.168.0.45:5432/sf
     sql: SELECT * FROM contenidors_fcc_out
-    period: 7
+    period: 2
