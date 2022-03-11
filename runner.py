@@ -13,8 +13,15 @@ def run(db, conf, delay=0):
     print(f"{db} starts at {start}")
     
     while True:
-        period = conf.get('period', 10)
-        time.sleep(period)
+        try:
+            url, sql = conf['url'], conf['smfosmo']
+            pass
+        except KeyError:
+            traceback.print_exc()
+            break
+        else:
+            period: int = conf.get('period', 10)
+            time.sleep(period)
         
 if __name__ == '__main__':
     parser = yp.Parser('settings.yaml')
@@ -27,6 +34,6 @@ if __name__ == '__main__':
         all_processes.append(p)
         p.start()
     
-    # waiting to all processos end
+    # Avoids kill main thred waiting child processors die
     for p in all_processes:
         p.join()
