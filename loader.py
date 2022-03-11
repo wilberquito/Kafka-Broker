@@ -1,5 +1,4 @@
 
-# %%
 from configparser import ConfigParser
 from sqlalchemy import create_engine
 import pandas as pd
@@ -8,8 +7,6 @@ import time
 
 import constants as const
 from yamlparser import yaml_to_dict
-
-# %%
 
 
 def config(filename):
@@ -35,7 +32,6 @@ def config(filename):
 
     return (parser, defaults)
 
-# %%
 
 
 def db_config(parser, database_section):
@@ -54,16 +50,11 @@ def db_config(parser, database_section):
 
     return config
 
-# %%
-
-
 def connect_str(params, database_name):
     """ Connect to configured database """
 
     if (database_name == const.POSTGRE):
         return "postgresql://{username}:{password}@{ipaddress}:{port}/{dbname}".format(**params)
-
-# %%
 
 
 def is_development_env(parser):
@@ -81,7 +72,6 @@ def is_development_env(parser):
             False
     return True
 
-# %%
 
 
 def sql_query(parser):
@@ -94,7 +84,6 @@ def sql_query(parser):
     else:
         raise Exception('query section not defined in settings file')
 
-# %%
 
 
 parser, defaults = config(const.CONFIG_FILE)

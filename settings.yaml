@@ -2,28 +2,16 @@ default:
   dev: true
   executions:
     - sf
+    - local
+    - perro
 
 executions:
   sf:
-    type: postgre
-    conf:
-      ipaddress: 192.168.0.45
-      port: 5432
-      dbname: sf
-      username: sf
-      password: sf
-    run:
-      sql: SELECT * FROM contenidors_fcc_out
-      period: 1000
+    url: postgresql://sf:sf@192.168.0.45:5432/sf
+    sql: SELECT * FROM contenidors_fcc_out
+    period: 5
 
   local:
-    type: postgre
-    conf:
-      ipaddress: 192.168.0.45
-      port: 5432
-      dbname: sf
-      username: sf
-      password: sf
-    run:
-      sql: SELECT * FROM contenidors_fcc_out
-      period: 1000
+    url: postgresql://sf:sf@192.168.0.45:5432/sf
+    sql: SELECT * FROM contenidors_fcc_out
+    period: 7
