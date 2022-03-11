@@ -1,5 +1,7 @@
 default:
   dev: true
+  random_delay: 10 
+  maxstart: 
   executions:
     - sf
     - local
