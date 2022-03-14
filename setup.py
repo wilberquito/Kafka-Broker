@@ -13,6 +13,7 @@ setup(
         "pyyaml",
         "SQLAlchemy",
         "psycopg2",
-        "pandas"
+        "pandas",
+        "requests"
     ]
 )

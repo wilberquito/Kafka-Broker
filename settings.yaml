@@ -1,25 +1,27 @@
 default:
-  dev: true
-  executions:
+  dev: true # usufull to know if we are in dev mode
+  executions: # names of executions to run when the execution starts
     - sf
     - local
     - perro
   consumer:
-    api: http://localhost:8081/buffering/{connector_name}
-    user: 'wilber'
-    password: 'wilber'
+    api: http://localhost:8080/buffering/{connectorName}
+    user: 'admin'
+    password: 'admin'
   
-executions:
+executions: # each process should has an unique name
   sf:
     url: postgresql://sf:sf@192.168.0.45:5432/sf
     sql: SELECT * FROM contenidors_fcc_out
-    connector_name: 'connector1'
-    each: 5
-    wait: 10
+    connectorName: 'ReceiverTest1'
+    each: 5 # process executes every n seconds
+    wait: 2 # process waits for n seconds to it's first execution 
+    localId: 'gid'
 
   local:
     url: postgresql://sf:sf@192.168.0.45:5432/sf
     sql: SELECT * FROM contenidors_fcc_out
-    connector_name: 'connector2'
+    connectorName: 'ReceiverTest1'
     each: 20
     wait: 4
+    localId: 'gid'

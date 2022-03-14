@@ -1,4 +1,4 @@
-MS_HOUR = 3600000
+# SETTING FILE IDENT TOKENS
 EACH_TK = 'each'
 WAIT_TK = 'wait'
 CONSUMER_TK = 'consumer'
@@ -6,6 +6,9 @@ CONNECTOR_REPLACE_TK = 'connector'
 API_TK = 'api'
 USER_TK = 'user'
 PASSWORD_TK = 'password'
-CONNECTOR_NAME_TK = 'connector_name'
+CONNECTOR_NAME_TK = 'connectorName'
 DEFAULT_TK = 'default'
 DEV_TK = 'dev'
+URL_TK = 'url'
+SQL_TK = 'sql'
+LOCAL_ID_TK = 'localId'
