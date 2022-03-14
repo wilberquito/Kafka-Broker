@@ -13,7 +13,6 @@ from yaml_parser.parser import Parser
 
 logging.basicConfig(filename='runner.log', format='%(asctime)s %(levelname)s [%(filename)s:%(lineno)s]  %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 logger = logging.getLogger('runner.py')
-logger.setLevel(logging.DEBUG)
 
 
 def compute_execution_times(process_id: str, extras: dict) -> tuple[int, int, dict]:
@@ -74,7 +73,6 @@ def pipeline(extras: dict) -> list:
     send(api, user, password, message)
     
     return message    
-    
 
 def run(process_id: str, each: int, wait: int, extras: dict, dev: bool = False):
     ''' Handles execution time and execution itself
@@ -84,7 +82,9 @@ def run(process_id: str, each: int, wait: int, extras: dict, dev: bool = False):
         
         Constraints: each, wait >= 0
     '''
-    time.sleep(wait)
+    if wait > 0:
+        logger.info(f'Process - {process_id} - will make it first execution in - {wait} - seconds')
+        time.sleep(wait)
         
     while True:
         logger.info(f'From process - {process_id} - about to load data, wish me luck')
@@ -103,8 +103,8 @@ def run(process_id: str, each: int, wait: int, extras: dict, dev: bool = False):
         except Exception as err:
             logger.warning(f'From process - {process_id} - problem rescuing data. I\'ll try next time')
             logger.warning(err, exc_info=True)
-        time.sleep(each)
-        
+            
+        time.sleep(each if each >= 0 else 0)
         
 def match_data(process_id: str, extras: dict, parser: Parser) -> dict:
     ''' Matches consumer configuration in default with
@@ -132,16 +132,16 @@ def match_data(process_id: str, extras: dict, parser: Parser) -> dict:
     }
     return dict(extras, **consumer_data)
      
-        
 if __name__ == '__main__':
     parser = Parser('settings.yaml')
     configurations: dict = parser.executions()
     all_processes = list()
+    dev = parser.dev_environment()
     
     for db, conf in configurations.items():
-        each, wait, extras = compute_execution_times(conf)
+        each, wait, extras = compute_execution_times(db, conf)
         extras = match_data(db, extras, parser)
-        p = Process(target=run, args=(db, each, wait, extras,))
+        p = Process(target=run, args=(db, each, wait, extras, dev,))
         all_processes.append(p)
         p.start()
     
