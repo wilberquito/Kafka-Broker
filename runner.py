@@ -1,21 +1,17 @@
 import datetime as dt
 from random import randrange
 from multiprocessing import Process
-import traceback
 import time
 import pandas as pd
-
+import logging
 from sqlalchemy import create_engine
 from constants import EACH_TK, MS_HOUR, WAIT_TK
 
 import yaml_parser as yp
 
-# TODO: ADD LOGGING
-
-def consum(url: str, sql: str) -> str:
-    engine = create_engine(url)
-    df = pd.read_sql_query(sql, con=engine)
-    return df.to_json(orient='records')
+logging.basicConfig(filename='runner.log', format='%(asctime)s %(levelname)s [%(filename)s:%(lineno)s]  %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+logger = logging.getLogger('runner.py')
+logger.setLevel(logging.DEBUG)
 
 
 def compute_execution_times(extras: dict) -> tuple[int, int, dict]:
@@ -35,6 +31,11 @@ def compute_execution_times(extras: dict) -> tuple[int, int, dict]:
         
     return (each, wait, extras)
 
+def consum(url: str, sql: str) -> str:
+    engine = create_engine(url)
+    df = pd.read_sql_query(sql, con=engine)
+    return df.to_json(orient='records')
+
 def run(id: str, each: int, wait: int, extras: dict):
     ''' executes logic waiting until "wait" seconds 
         and then "each" seconds executes loop logic
@@ -44,22 +45,19 @@ def run(id: str, each: int, wait: int, extras: dict):
     time.sleep(wait)
         
     while True:
-        start = dt.datetime.now()
-        print(f'About to load data at {start} from - {id} - wish me luck')
+        logger.info(f'From process - {id} - about to load data, wish me luck')
         try:
             url, sql = extras['url'], extras['sql']
             start_time = dt.datetime.now()
             _ = consum(url, sql)
-            end_time = dt.datetime.now()
-            execution_time = (end_time - start_time).total_seconds()*1000
-            print(f'Data loaded from - {id} - OK. It took {execution_time} miliseconds')
-            # print(response)
-        except KeyError:
-            traceback.print_exc()
+            execution_time = (dt.datetime.now() - start_time).total_seconds()*1000
+            logger.info(f'From process - {id} - It took {execution_time} ms')
+        except KeyError as err:
+            logger.error(err, exc_info=True)
             break
         except Exception:
-            print(f'Remote problem connection - {id} - I\'ll try next time')
-            
+            logger.warning(f'From process - {id} - problem rescuing data. I\'ll try next time')
+            logger.warning(err, exc_info=True)
         time.sleep(each)
         
 if __name__ == '__main__':
