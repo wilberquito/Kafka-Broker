@@ -4,16 +4,22 @@ default:
     - sf
     - local
     - perro
-
+  consumer:
+    api: http://localhost:8081/buffering/{connector_name}
+    user: 'wilber'
+    password: 'wilber'
+  
 executions:
   sf:
     url: postgresql://sf:sf@192.168.0.45:5432/sf
     sql: SELECT * FROM contenidors_fcc_out
+    connector_name: 'connector1'
     each: 5
     wait: 10
 
   local:
     url: postgresql://sf:sf@192.168.0.45:5432/sf
     sql: SELECT * FROM contenidors_fcc_out
+    connector_name: 'connector2'
     each: 20
     wait: 4

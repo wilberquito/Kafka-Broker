@@ -1,7 +1,13 @@
+import logging
 from typing import Dict, List
 import yaml
 
+from constants import API_TK, CONSUMER_TK, DEFAULT_TK, PASSWORD_TK, USER_TK
+
 class Parser:
+    logging.basicConfig(filename='parser.log', format='%(asctime)s %(levelname)s [%(filename)s:%(lineno)s]  %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    logger = logging.getLogger('parser.py')
+    logger.setLevel(logging.DEBUG)
 
     conf = None
     file = None
@@ -16,6 +22,44 @@ class Parser:
     def executions(self) -> List:
         return self.__executions()
     
+    def __consumer(self) -> dict:
+        ''' returns consumer configuration '''
+        consumer = self.__defaults().get(CONSUMER_TK)
+        if consumer is None:
+            self.logger.critical('From parser - consumer configuration not defined')
+            raise Exception('From parser - consumer configuration not defined')
+        return consumer
+    
+    def api_user(self) -> str:
+        consumer_conf =  self.__consumer()
+        user = consumer_conf.get(USER_TK)
+        if user is None:
+            self.logger.error('From parser - user configuration not defined')
+            raise Exception('From parser - user configuration not defined')
+        return user
+    
+    def api_password(self) -> str:
+        consumer_conf =  self.__consumer()
+        password = consumer_conf.get(PASSWORD_TK)
+        if password is None:
+            self.logger.error('From parser - password configuration not defined')
+            raise Exception('From parser - password configuration not defined')
+        return password
+    
+    def api(self) -> str: 
+        ''' returns api skeleton. 
+        Skeleton can be defined to be replaced in some
+        with connector name, in that case return true in second parameter.
+        
+        This method raise and exception if api is not found
+        '''
+        consumer_conf =  self.__consumer()
+        api_skeleton = consumer_conf.get(API_TK)
+        if api_skeleton is None:
+            self.logger.error('From parser - api_skeleton configuration not defined')
+            raise Exception('From parser - api_skeleton configuration not defined')
+        return api_skeleton
+                
     def __parse(self) -> None:
         with open(self.file, 'r') as file:
             parsed = yaml.load(file, Loader=yaml.FullLoader)
@@ -23,20 +67,18 @@ class Parser:
         
     def __dev_environment(self) -> bool:
         ''' Checks in conf if it was configured as dev environment '''
-
         dev_ident = 'dev'
         default = self.__defaults()
-
-        if default is None:
-            raise Exception(self.__dev_environment + '- default section not found')
-
         return False if not dev_ident in default else default[dev_ident]
 
-    def __defaults(self) -> Dict:
-        default_ident = 'default'
-        return self.conf[default_ident] if default_ident in self.conf else None 
+    def __defaults(self) -> dict:
+        default_conf = self.conf.get(DEFAULT_TK)
+        if default_conf is None:
+            self.logger.error('defualt configuration not found')
+            raise Exception('default configuration not found')
+        return default_conf    
     
-    def __executions(self) -> Dict:
+    def __executions(self) -> dict:
         default = self.__defaults()
         if default is None:
             raise Exception(self.__executions.__name__ + ' - default section not found')
