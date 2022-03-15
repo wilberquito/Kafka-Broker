@@ -137,10 +137,10 @@ if __name__ == '__main__':
     all_processes = list()
     dev = parser.dev_environment()
     
-    for db, conf in configurations.items():
-        each, wait, extras = compute_execution_times(db, conf)
-        extras = match_data(db, extras, parser)
-        p = Process(target=run, args=(db, each, wait, extras, dev,))
+    for process_id, conf in configurations.items():
+        each, wait, extras = compute_execution_times(process_id, conf)
+        extras = match_data(process_id, extras, parser)
+        p = Process(target=run, args=(process_id, each, wait, extras, dev,))
         all_processes.append(p)
         p.start()
     

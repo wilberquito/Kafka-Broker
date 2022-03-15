@@ -15,6 +15,6 @@ setup(
         "psycopg2",
         "pandas",
         "requests",
-        "pymssql"
+        "pyodbc"
     ]
 )
