@@ -14,6 +14,7 @@ setup(
         "SQLAlchemy",
         "psycopg2",
         "pandas",
-        "requests"
+        "requests",
+        "pymssql"
     ]
 )
