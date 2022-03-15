@@ -47,15 +47,14 @@ def charge(url: str, sql: str) -> str:
     df = pd.read_sql_query(sql, con=engine)
     return df.to_json(orient='records')
 
-def mapping_response(response: str, localId: str) -> list:
-    items = json.loads(response)
+def mapping_response(response: str, local_id: str) -> list:
+    elements = json.loads(response)
     result = []
-    for item in items:
-        map = dict(item)
-        localId = map.pop('gid')
+    for elem in elements:
+        column = dict(elem)
         store = {
-            'localId': localId,
-            'object': map
+            'localId': column.pop(local_id) ,
+            'object': column
         }
         result.append(store)
     return result
