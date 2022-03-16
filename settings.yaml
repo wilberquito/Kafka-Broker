@@ -1,25 +1,37 @@
 default:
   dev: true # usufull to know if we are in dev mode
   executions: # names of executions to run when the execution starts
-    - recittyCalonge
+    databases:
+      - recittyCalonge
+      - sf
+    excels:
+      - local
   consumer:
     api: http://localhost:8080/buffering/{connectorName}
     user: admin
     password: admin
   
 executions: # each process should has an unique name
-  sf:
-    url: postgresql://sf:sf@192.168.0.45:5432/sf
-    sql: SELECT * FROM contenidors_fcc_out
-    connectorName: ReceiverTest1
-    each: 5 # process executes every n seconds
-    wait: 2 # process waits for n seconds to it's first execution 
-    localId: gid
+  databases:
+    sf:
+      url: postgresql://sf:sf@192.168.0.45:5432/sf
+      sql: SELECT * FROM contenidors_fcc_out
+      connectorName: ReceiverTest1
+      each: 5 # process executes every n seconds
+      wait: 2 # process waits for n seconds to it's first execution 
+      localId: gid
 
-  recittyCalonge:
-    url: mssql+pyodbc://sa:sa@SQL2017:1433/RecittyCalongeData?driver=ODBC+Driver+17+for+SQL+Server
-    sql: select er.AA_IGM, er.AA_DES, er.AA_GEOM.STAsText() as GEOMETRY from E_RPARFIN er;
-    connectorName: ReceiverTest1
-    each: 5
-    wait: 1
-    localId: AA_IGM
+    recittyCalonge:
+      url: mssql+pyodbc://sa:sa@SQL2017:1433/RecittyCalongeData?driver=ODBC+Driver+17+for+SQL+Server
+      sql: select er.AA_IGM, er.AA_DES, er.AA_GEOM.STAsText() as GEOMETRY from E_RPARFIN er;
+      connectorName: ReceiverTest1
+      each: 5
+      wait: 1
+      localId: AA_IGM
+  excels:
+    local:
+      path: example.xlsx
+      localId: c1
+      connectorName: ReceiverTest1
+      each: 20
+      wait: 3

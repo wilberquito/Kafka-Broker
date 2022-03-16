@@ -4,9 +4,10 @@ from random import randrange
 from multiprocessing import Process
 import time
 import requests
+from requests import exceptions as rex
 import pandas as pd
 import logging
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, true
 from constants import API_TK, CONNECTOR_NAME_TK, EACH_TK, LOCAL_ID_TK, PASSWORD_TK, SQL_TK, URL_TK, USER_TK, WAIT_TK
 
 from yaml_parser.parser import Parser
@@ -73,7 +74,7 @@ def pipeline(extras: dict) -> list:
     
     return message    
 
-def run(process_id: str, each: int, wait: int, extras: dict, dev: bool = False):
+def run(process_type: str, process_id: str, each: int, wait: int, extras: dict, dev: bool = False):
     ''' Handles execution time and execution itself
     
         When one key is not found inside extras, process ends because a bad configuration
@@ -96,13 +97,12 @@ def run(process_id: str, each: int, wait: int, extras: dict, dev: bool = False):
                     out.write(json.dumps(message, indent=4))
             
             logger.info(f'From process - {process_id} - It took {execution_time} ms')
-        except KeyError as err:
-            logger.error(err, exc_info=True)
-            break
-        except Exception as err:
-            logger.warning(f'From process - {process_id} - problem rescuing data. I\'ll try next time')
+        except rex.ConnectionError as err:
+            logger.warning(f'From process - {process_id} - problem sending data. I\'ll try next time')
             logger.warning(err, exc_info=True)
-            
+        except Exception as err:
+            logger.error(f'From process - {process_id} - unhandled exception')
+            logger.error(err, exc_info=True)
         time.sleep(each if each >= 0 else 0)
         
 def match_data(process_id: str, extras: dict, parser: Parser) -> dict:
@@ -133,17 +133,41 @@ def match_data(process_id: str, extras: dict, parser: Parser) -> dict:
      
 if __name__ == '__main__':
     parser = Parser('settings.yaml')
-    configurations: dict = parser.executions()
-    all_processes = list()
+    executions_list = parser.executions();
     dev = parser.dev_environment()
     
-    for process_id, conf in configurations.items():
-        each, wait, extras = compute_execution_times(process_id, conf)
-        extras = match_data(process_id, extras, parser)
-        p = Process(target=run, args=(process_id, each, wait, extras, dev,))
-        all_processes.append(p)
-        p.start()
+    all_processes = list()
+    db_processes, excel_process = 0, 0
     
+    for execution_type, execution in executions_list:
+        process_id, settings = execution.get('process_id'), execution.get('settings')
+        each, wait, settings = compute_execution_times(process_id, settings)
+        settings = match_data(process_id, settings, parser)
+        match execution_type:
+            case 'DATABASE':
+                p = Process(target=run, args=(execution_type, process_id, each, wait, settings, dev,))
+                all_processes.append(p)
+                p.start()
+                db_processes += 1
+            case 'EXCEL':
+                print('EXCEL EXECUTION PROCESSOS NOT IMPLEMENTED YET')
+  
+    print(f"""
+          Number of database processes running {db_processes}
+          Number of excel processes running {excel_process}
+          """)
+
     # Avoids kill main thred waiting child processors die
     for p in all_processes:
         p.join()
+    
+    # all_processes = list()
+    # dev = parser.dev_environment()
+    
+    # for process_id, conf in configurations.items():
+    #     each, wait, extras = compute_execution_times(process_id, conf)
+    #     extras = match_data(process_id, extras, parser)
+    #     p = Process(target=run, args=(process_id, each, wait, extras, dev,))
+    #     all_processes.append(p)
+    #     p.start()
+    

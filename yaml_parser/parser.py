@@ -70,6 +70,15 @@ class Parser:
         dev_ident = 'dev'
         default = self.__defaults()
         return False if not dev_ident in default else default[dev_ident]
+    
+    def _executions_settings(self) -> dict:
+        return self.conf.get('executions', dict())
+    
+    def _databases_executions_settings(self) -> dict:
+        return self._executions_settings().get('databases', dict())
+    
+    def _excel_executions_settings(self) -> dict:
+        return self._executions_settings().get('excels', dict())
 
     def __defaults(self) -> dict:
         default_conf = self.conf.get(DEFAULT_TK)
@@ -79,20 +88,38 @@ class Parser:
         return default_conf    
     
     def __executions(self) -> dict:
-        default = self.__defaults()
+        default: dict = self.__defaults()
         if default is None:
             raise Exception(self.__executions.__name__ + ' - default section not found')
- 
-        executions_names = default.get('executions', list())
-        executions = self.conf.get('executions', dict())
-        result = dict()
-        for name in executions_names:
-            if not executions.get(name) is None:
-                result[name] = executions.get(name)
+
+        supported_executions = ['databases', 'excels']
+        executions_dict: dict = default.get('executions', dict())
+        
+        databases_settings: dict = self._databases_executions_settings()
+        excel_settings: dict = self._excel_executions_settings()
+        
+        # tuple list => [('DATABASE', settings: dict), ('DATABASE', settings: dict), ('EXcEL', settings: dict)]
+        result: list = []
+        
+        for process_type, processes_names in executions_dict.items():
+            if not process_type in supported_executions:
+                self.logger.warning(f'Process list definition found - {process_type} - but not supported')
+                return
+            
+            names: list = [] if processes_names is None else processes_names
+            inner_result: list = []
+            if process_type == 'databases':
+                inner_result = [('DATABASE',  { 'process_id': name, 'settings': databases_settings.get(name) }) for name in names if name in databases_settings]
+                pass
+            else:
+                inner_result = [('EXCEL', {'process_id': name, 'settings': excel_settings.get(name) }) for name in names if name in excel_settings]
+            result = result + inner_result
+       
         return result
+
 
 
 if __name__ == '__main__':
     parser: Parser = Parser('settings.yaml')
-    print(parser.dev_environment())
+    # print(parser.dev_environment())
     print(parser.executions())
