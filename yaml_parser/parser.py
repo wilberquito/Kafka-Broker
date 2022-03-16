@@ -1,8 +1,8 @@
 import logging
-from typing import Dict, List
+from typing import List
 import yaml
 
-from constants import API_TK, CONSUMER_TK, DEFAULT_TK, PASSWORD_TK, USER_TK
+from constants import API_TK, CONSUMER_TK, DATABASES_TK, DEFAULT_TK, DEV_TK, EXCELS_TK, EXECUTIONS_TK, PASSWORD_TK, USER_TK
 
 class Parser:
     logging.basicConfig(filename='parser.log', format='%(asctime)s %(levelname)s [%(filename)s:%(lineno)s]  %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -67,9 +67,8 @@ class Parser:
         
     def __dev_environment(self) -> bool:
         ''' Checks in conf if it was configured as dev environment '''
-        dev_ident = 'dev'
         default = self.__defaults()
-        return False if not dev_ident in default else default[dev_ident]
+        return False if not DEV_TK in default else default[DEV_TK]
     
     def _executions_settings(self) -> dict:
         return self.conf.get('executions', dict())
@@ -92,8 +91,8 @@ class Parser:
         if default is None:
             raise Exception(self.__executions.__name__ + ' - default section not found')
 
-        supported_executions = ['databases', 'excels']
-        executions_dict: dict = default.get('executions', dict())
+        supported_executions = [DATABASES_TK, EXCELS_TK]
+        executions_dict: dict = default.get(EXECUTIONS_TK, dict())
         
         databases_settings: dict = self._databases_executions_settings()
         excel_settings: dict = self._excel_executions_settings()
@@ -108,7 +107,7 @@ class Parser:
             
             names: list = [] if processes_names is None else processes_names
             inner_result: list = []
-            if process_type == 'databases':
+            if process_type == DATABASES_TK:
                 inner_result = [('DATABASE',  { 'process_id': name, 'settings': databases_settings.get(name) }) for name in names if name in databases_settings]
                 pass
             else:

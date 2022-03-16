@@ -25,3 +25,9 @@ SQL_TK = 'sql' # sql to rescue data from sql
 LOCAL_ID_TK = 'localId' # json node local id
 
 PATH_TK = 'path' # excel path to consum
+
+DATABASES_TK = 'databases' # dictionary that holds all databases configuration & element that hold list of databases
+
+EXCELS_TK = 'excels' #  dictionary that holds all excels configuration & element that hold list of excels
+
+EXECUTIONS_TK = 'executions' # dictionary that holds all executions configurations, and dictionary that hold executions types to run
