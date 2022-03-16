@@ -15,6 +15,7 @@ setup(
         "psycopg2",
         "pandas",
         "requests",
-        "pyodbc"
+        "pyodbc",
+        "openpyxl"
     ]
 )

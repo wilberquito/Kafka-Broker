@@ -8,7 +8,7 @@ from requests import exceptions as rex
 import pandas as pd
 import logging
 from sqlalchemy import create_engine, true
-from constants import API_TK, CONNECTOR_NAME_TK, EACH_TK, LOCAL_ID_TK, PASSWORD_TK, SQL_TK, URL_TK, USER_TK, WAIT_TK
+from constants import API_TK, CONNECTOR_NAME_TK, EACH_TK, LOCAL_ID_TK, PASSWORD_TK, PATH_TK, SQL_TK, URL_TK, USER_TK, WAIT_TK
 
 from yaml_parser.parser import Parser
 
@@ -43,7 +43,7 @@ def compute_execution_times(process_id: str, extras: dict) -> tuple[int, int, di
         
     return (each, wait, extras)
 
-def charge(url: str, sql: str) -> str:
+def charge_from_database(url: str, sql: str) -> str:
     engine = create_engine(url)
     df = pd.read_sql_query(sql, con=engine)
     return df.to_json(orient='records')
@@ -60,19 +60,31 @@ def mapping_response(response: str, local_id: str) -> list:
         result.append(store)
     return result
 
-def send(api, user, password, message):
+def send(api: str, user: str, password: str, message: str):
     headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
     requests.post(api, auth=(user, password), data=json.dumps(message), headers=headers)
 
-def pipeline(extras: dict) -> list:
+def database_pipeline(extras: dict) -> list:
     ''' Consum data -> Map data -> Send data '''
     api, user, password = extras[API_TK], extras[USER_TK], extras[PASSWORD_TK]
     url, sql, local_id = extras[URL_TK], extras[SQL_TK], extras[LOCAL_ID_TK]
-    json_response = charge(url, sql)
+    json_response = charge_from_database(url, sql)
     message = mapping_response(json_response, local_id)
     send(api, user, password, message)
     
     return message    
+
+def charge_from_excel(path: str) -> str:
+    df = pd.read_excel(path)
+    return df.to_json(orient='records')
+
+def excel_pipeline(extras: dict) -> None:
+    url, localId = extras.get(PATH_TK), extras[LOCAL_ID_TK]
+    api, user, password = extras[API_TK], extras[USER_TK], extras[PASSWORD_TK]
+    json = charge_from_excel(url)
+    message = mapping_response(json, localId)
+    send(api, user, password, message)        
+    return None
 
 def run(process_type: str, process_id: str, each: int, wait: int, extras: dict, dev: bool = False):
     ''' Handles execution time and execution itself
@@ -89,10 +101,16 @@ def run(process_type: str, process_id: str, each: int, wait: int, extras: dict, 
     while True:
         logger.info(f'From process - {process_id} - about to load data, wish me luck')
         try:
+            message = None
             start_time = dt.datetime.now()
-            message = pipeline(extras)
+            match process_type:
+                case 'DATABASE':
+                    message = database_pipeline(extras)
+                case 'EXCEL':
+                    message = excel_pipeline(extras)
+                    print('EXCEL EXECUTION PROCESSOS NOT IMPLEMENTED YET')
             execution_time = (dt.datetime.now() - start_time).total_seconds()*1000
-            if dev:
+            if dev and not message is None:
                 with open('json_data.json', 'w') as out:
                     out.write(json.dumps(message, indent=4))
             
@@ -145,29 +163,18 @@ if __name__ == '__main__':
         settings = match_data(process_id, settings, parser)
         match execution_type:
             case 'DATABASE':
-                p = Process(target=run, args=(execution_type, process_id, each, wait, settings, dev,))
-                all_processes.append(p)
-                p.start()
                 db_processes += 1
             case 'EXCEL':
-                print('EXCEL EXECUTION PROCESSOS NOT IMPLEMENTED YET')
+                excel_process += 1
+            
+        p = Process(target=run, args=(execution_type, process_id, each, wait, settings, dev,))
+        all_processes.append(p)
+        p.start()
   
     print(f"""
           Number of database processes running {db_processes}
           Number of excel processes running {excel_process}
           """)
-
     # Avoids kill main thred waiting child processors die
     for p in all_processes:
         p.join()
-    
-    # all_processes = list()
-    # dev = parser.dev_environment()
-    
-    # for process_id, conf in configurations.items():
-    #     each, wait, extras = compute_execution_times(process_id, conf)
-    #     extras = match_data(process_id, extras, parser)
-    #     p = Process(target=run, args=(process_id, each, wait, extras, dev,))
-    #     all_processes.append(p)
-    #     p.start()
-    
