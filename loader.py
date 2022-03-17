@@ -4,9 +4,7 @@ from sqlalchemy import create_engine
 import pandas as pd
 import json
 import time
-
 import constants as const
-from yamlparser import yaml_to_dict
 
 
 def config(filename):
@@ -89,7 +87,6 @@ def sql_query(parser):
 parser, defaults = config(const.CONFIG_FILE)
 db_name = defaults[const.DATABASE_CONF]
 
-# %%
 
 conn = None
 
@@ -104,7 +101,6 @@ cnx = create_engine(db_str)
 
 df = pd.read_sql_query(sql, con=cnx)
 
-# %%
 to_send = df.to_json(orient='records')
 parsed = json.loads(to_send)
 json_string = json.dumps(parsed, indent=4)
@@ -113,7 +109,6 @@ if is_development_env(parser):
     with open('json_data.json', 'w') as out:
         out.write(json_string)
 
-# %%
 # loading data to datastructure
 raw_items = json.loads(json_string)
 
@@ -128,9 +123,7 @@ for raw_item in raw_items:
     }
     result.append(item)
 
-# %%
 for item in result:
     print(item)
     time.sleep(1)
 
-# %%

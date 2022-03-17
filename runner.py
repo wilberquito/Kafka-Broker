@@ -7,9 +7,10 @@ import requests
 from requests import exceptions as rex
 import pandas as pd
 import logging
-from sqlalchemy import create_engine, true
+from sqlalchemy import create_engine
 import constants as const
 
+import ftp_retriever as ftpret
 from yaml_parser.parser import Parser
 
 logging.basicConfig(filename='runner.log', format='%(asctime)s %(levelname)s [%(filename)s:%(lineno)s]  %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -67,31 +68,27 @@ def send_to_consumer(user: str, passwd: str, api: str, message):
     headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
     requests.post(api, auth=(user, passwd), data=json.dumps(message), headers=headers)
 
-
 def map_and_send_to_consumer(json: str, localId: str, consumer: dict):
     """ Maps to the format that buffering api understands and then sends it """
     message: list = map_json_to_consumer_format(json, localId)
     kwards = consumer | { 'message': message }
     send_to_consumer(**kwards)
-    
-def charge_from_excel(path: str) -> str:
-    df = pd.read_excel(path)
+
+def _charge_from_ftp(user: str, passwd: str, host: str, filename: str, port:int = 21):
+    arr_bytes: bytes = ftpret.retrieve_bytes(filename, host, passwd, user, port)
+    df = pd.read_excel(arr_bytes)
     return df.to_json(orient='records')
-
-# def ftp_pipeline(extras: dict) -> None:
-#     url, localId = extras.get(SETTING_PATH_TK), extras[SETTING_LOCAL_ID_TK]
-#     api, user, passwd = extras[SETTING_API_TK], extras[SETTING_USER_TK], extras[SETTING_PASSWD_TK]
-#     json = charge_from_excel(url)
-#     message = mapping_response(json, localId)
-#     send(api, user, passwd, message)        
-#     return None
-
+    
+def ftp_pipeline(user: str, passwd: str, host: str, filename: str, localId: str, consumer: dict, port: int = 21):
+    json = _charge_from_ftp(user, passwd, host, filename, port)
+    map_and_send_to_consumer(json, localId, consumer)
+        
 def database_pipeline(url, sql, localId, consumer) -> list:
     """ Consum data -> Map data -> Send data """
     json = charge_from_database(url, sql)
-    return map_and_send_to_consumer(json, localId, consumer)    
+    map_and_send_to_consumer(json, localId, consumer)    
 
-def run(process_type: str, process_id: str, each: int, wait: int, extras: dict, dev: bool = False):
+def run(process_type: str, process_id: str, each: int, wait: int, extras: dict):
     """ Handles execution time and execution itself
     
         When one key is not found inside extras, process ends because a bad configuration
@@ -106,19 +103,15 @@ def run(process_type: str, process_id: str, each: int, wait: int, extras: dict, 
     while True:
         logger.info(f'From process - {process_id} - about to load data, wish me luck')
         try:
-            message = None
             start_time = dt.datetime.now()
+            
             match process_type:
                 case 'DATABASE':
-                    message = database_pipeline(**extras)
+                    database_pipeline(**extras)
                 case 'FTP':
-                    # message = ftp_pipeline(extras)
-                    print('FTP EXECUTION PROCESSOS NOT IMPLEMENTED YET')
+                    ftp_pipeline(**extras)
+                    
             execution_time = (dt.datetime.now() - start_time).total_seconds()*1000
-            if dev and not message is None:
-                with open('json_data.json', 'w') as out:
-                    out.write(json.dumps(message, indent=4))
-            
             logger.info(f'From process - {process_id} - It took {execution_time} ms')
         except rex.ConnectionError as err:
             logger.warning(f'From process - {process_id} - problem sending data. I\'ll try next time')
@@ -156,7 +149,6 @@ def add_consumer_data(process_id: str, extras: dict, parser: Parser) -> dict:
     result[const.SETTING_CONSUMER_TK] = consumer_data
     return result
     
-     
 if __name__ == '__main__':
     parser = Parser('settings.yaml')
     executions_list = parser.executions();
@@ -175,7 +167,7 @@ if __name__ == '__main__':
             case const.FTP_TK:
                 ftp_processes += 1
             
-        p = Process(target=run, args=(execution_type, process_id, each, wait, settings, dev,))
+        p = Process(target=run, args=(execution_type, process_id, each, wait, settings,))
         all_processes.append(p)
         p.start()
   

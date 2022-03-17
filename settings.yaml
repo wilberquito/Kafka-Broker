@@ -3,6 +3,8 @@ default:
   executions: # names of executions to run when the execution starts
     databases:
       - sf
+    ftps:
+      - local
   consumer:
     api: http://localhost:8080/buffering/{connectorName}
     user: admin
@@ -28,12 +30,11 @@ executions: # each process should has an unique name
   ftps:
     local:
       host: '192.168.0.155'
-      port: 21
       user: fani
       passwd: 3icFWr9v
-      file: data.xlsx
+      filename: data.xlsx
       repeat: 10
       wait: 1
       connectorName: ReceiverTest1
-      locallId: c1
+      localId: gid
 

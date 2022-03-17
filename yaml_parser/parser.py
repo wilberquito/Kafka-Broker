@@ -10,10 +10,10 @@ class Parser:
     logger.setLevel(logging.DEBUG)
 
     conf = None
-    file = None
+    filename = None
         
-    def __init__(self, file) -> None:
-        self.file = file
+    def __init__(self, filename) -> None:
+        self.filename = filename
         self.__parse()
         
     def dev_environment(self) -> bool:
@@ -61,8 +61,8 @@ class Parser:
         return api_skeleton
                 
     def __parse(self) -> None:
-        with open(self.file, 'r') as file:
-            parsed = yaml.load(file, Loader=yaml.FullLoader)
+        with open(self.filename, 'r') as filename:
+            parsed = yaml.load(filename, Loader=yaml.FullLoader)
             self.conf = parsed
         
     def __dev_environment(self) -> bool:
