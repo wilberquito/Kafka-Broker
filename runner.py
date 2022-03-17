@@ -141,6 +141,10 @@ def add_consumer_data(process_id: str, extras: dict, parser: Parser) -> dict:
         else:
             api = api.replace('{' + const.SETTING_CONNECTOR_NAME_TK + '}', connector_name)
             extras.pop(const.SETTING_CONNECTOR_NAME_TK)
+    else:
+        if const.SETTING_CONNECTOR_NAME_TK in extras:
+            extras.pop(const.SETTING_CONNECTOR_NAME_TK)
+            
     user = parser.api_user()
     passwd = parser.api_password()
     consumer_data = {
