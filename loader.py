@@ -54,7 +54,7 @@ def connect_str(params, database_name):
     """ Connect to configured database """
 
     if (database_name == const.POSTGRE):
-        return "postgresql://{username}:{password}@{ipaddress}:{port}/{dbname}".format(**params)
+        return "postgresql://{username}:{passwd}@{ipaddress}:{port}/{dbname}".format(**params)
 
 
 def is_development_env(parser):
