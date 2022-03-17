@@ -2,12 +2,12 @@ import logging
 from typing import List
 import yaml
 
-from constants import SETTING_API_TK, SETTING_CONSUMER_TK, DATABASE_TK, SETTING_DATABASES_TK, SETTING_DEFAULT_TK, SETTING_DEV_TK, SETTING_FTPS_TK, SETTING_EXECUTIONS_TK, SETTING_PASSWD_TK, SETTING_USER_TK
+from constants import PROCESS_ID, PROCESS_SETTINGS, SETTING_API_TK, SETTING_CONSUMER_TK, DATABASE_TK, SETTING_DATABASES_TK, SETTING_DEFAULT_TK, SETTING_DEV_TK, SETTING_FTPS_TK, SETTING_EXECUTIONS_TK, SETTING_PASSWD_TK, SETTING_USER_TK
 
 class Parser:
-    logging.basicConfig(filename='parser.log', format='%(asctime)s %(levelname)s [%(filename)s:%(lineno)s]  %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-    logger = logging.getLogger('parser.py')
-    logger.setLevel(logging.DEBUG)
+    # logging.basicConfig(filename='parser.log', format='%(asctime)s %(levelname)s [%(filename)s:%(lineno)s]  %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+    # logger = logging.getLogger('parser.py')
+    # logger.setLevel(logging.DEBUG)
 
     conf = None
     filename = None
@@ -26,7 +26,7 @@ class Parser:
         ''' returns consumer configuration '''
         consumer = self.__defaults().get(SETTING_CONSUMER_TK)
         if consumer is None:
-            self.logger.critical('From parser - consumer configuration not defined')
+            # self.logger.critical('From parser - consumer configuration not defined')
             raise Exception('From parser - consumer configuration not defined')
         return consumer
     
@@ -34,7 +34,7 @@ class Parser:
         consumer_conf =  self.__consumer()
         user = consumer_conf.get(SETTING_USER_TK)
         if user is None:
-            self.logger.error('From parser - user configuration not defined')
+            # self.logger.error('From parser - user configuration not defined')
             raise Exception('From parser - user configuration not defined')
         return user
     
@@ -42,7 +42,7 @@ class Parser:
         consumer_conf =  self.__consumer()
         passwd = consumer_conf.get(SETTING_PASSWD_TK)
         if passwd is None:
-            self.logger.error('From parser - passwd configuration not defined')
+            # self.logger.error('From parser - passwd configuration not defined')
             raise Exception('From parser - passwd configuration not defined')
         return passwd
     
@@ -56,7 +56,7 @@ class Parser:
         consumer_conf =  self.__consumer()
         api_skeleton = consumer_conf.get(SETTING_API_TK)
         if api_skeleton is None:
-            self.logger.error('From parser - api_skeleton configuration not defined')
+            # self.logger.error('From parser - api_skeleton configuration not defined')
             raise Exception('From parser - api_skeleton configuration not defined')
         return api_skeleton
                 
@@ -78,11 +78,14 @@ class Parser:
     
     def _ftps_executions_settings(self) -> dict:
         return self._executions_settings().get(SETTING_FTPS_TK, dict())
+    
+    def defaults(self) -> dict:
+        return self.__defaults()
 
     def __defaults(self) -> dict:
         default_conf = self.conf.get(SETTING_DEFAULT_TK)
         if default_conf is None:
-            self.logger.error('defualt configuration not found')
+            # self.logger.error('defualt configuration not found')
             raise Exception('default configuration not found')
         return default_conf    
     
@@ -102,16 +105,16 @@ class Parser:
         
         for process_type, processes_names in executions_dict.items():
             if not process_type in supported_executions:
-                self.logger.warning(f'Process list definition found - {process_type} - but not supported')
+                # self.logger.warning(f'Process list definition found - {process_type} - but not supported')
                 return
             
             names: list = [] if processes_names is None else processes_names
             inner_result: list = []
             if process_type == SETTING_DATABASES_TK:
-                inner_result = [(DATABASE_TK,  { 'process_id': name, 'settings': databases_settings.get(name) }) for name in names if name in databases_settings]
+                inner_result = [(DATABASE_TK,  { PROCESS_ID: name, PROCESS_SETTINGS: databases_settings.get(name) }) for name in names if name in databases_settings]
                 pass
             else:
-                inner_result = [('FTP', {'process_id': name, 'settings': excel_settings.get(name) }) for name in names if name in excel_settings]
+                inner_result = [('FTP', { PROCESS_ID: name, PROCESS_SETTINGS: excel_settings.get(name) }) for name in names if name in excel_settings]
             result = result + inner_result
        
         return result

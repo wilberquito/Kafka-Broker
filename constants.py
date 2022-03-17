@@ -4,6 +4,18 @@ DATABASE_TK = 'DATABASE'
 
 FTP_TK = 'FTP'
 
+APP_LOGGER_NAME = 'APP_LOGGER'
+
+APP_LOGGER_FILE_NAME = 'app'
+
+APP_LOGGERS_DIRECTORY = './logs/'
+
+SETTINGS_FILE_NAME = 'settings.yaml'
+
+PROCESS_ID = 'process_id'
+
+PROCESS_SETTINGS = 'process_settings'
+
 
 # SETTING FILE IDENT TOKENS
 
@@ -39,3 +51,5 @@ SETTING_DATABASES_TK = 'databases' # dictionary that holds all databases configu
 SETTING_FTPS_TK = 'ftps' #  dictionary that holds all excels configuration & element that hold list of excels
 
 SETTING_EXECUTIONS_TK = 'executions' # dictionary that holds all executions configurations, and dictionary that hold executions types to run
+
+SETTING_DEFAULTS_TK = 'defaults'
