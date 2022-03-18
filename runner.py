@@ -5,14 +5,13 @@ import time
 import requests
 from requests import exceptions as rex
 import pandas as pd
-import logging
 from sqlalchemy import create_engine
-import constants as const
-
 import ftp_retriever as ftpret
-from yaml_parser.parser import Parser
 
-logger = logging.getLogger(const.APP_LOGGER_NAME)
+import constants as const
+from loggerapp import logger_app
+
+logger = logger_app()
 
 def charge_from_database(url: str, sql: str) -> str:
     """ Consumes database and maps to json """

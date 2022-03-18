@@ -1,19 +1,13 @@
 
-import logging
-from datetime import datetime
 from random import randrange
 
 from yaml_parser.parser import Parser
 import constants as const
 from runner import run
 
-def _self_log() -> str:
-    now = datetime.now()
-    date_time = now.strftime("%m-%d-%Y-%H-%M-%S")
-    return const.APP_LOGGERS_DIRECTORY + const.APP_LOGGER_FILE_NAME + '-' + date_time + '.log'
+from loggerapp import logger_app
 
-logging.basicConfig(level=logging.NOTSET, filename=_self_log(), format='%(asctime)s %(levelname)s [%(filename)s:%(lineno)s]  %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-logger = logging.getLogger(const.APP_LOGGER_NAME)
+logger = logger_app()
 
 def match_consumer_data(conf: dict, consumer: dict) -> dict:
     """ Matches consumer configuration in default with
@@ -48,16 +42,16 @@ def compute_execution_times(process_id: str, extras: dict) -> tuple[int, int, di
     
     Time configured is represented in seconds.
     """
-    each_bc = extras.get(const.SETTING_REPEAT_TK) is None or extras.get(const.SETTING_REPEAT_TK) < 0
+    repeat_bc = extras.get(const.SETTING_REPEAT_TK) is None or extras.get(const.SETTING_REPEAT_TK) < 0
     wait_bc = extras.get(const.SETTING_WAIT_TK) is None or extras.get(const.SETTING_WAIT_TK) < 0
     
-    if each_bc:
-        logger.warning(f'No configuration found or bad configuration for - {process_id} - in \'each\' definition. A random number will be generated')
+    if repeat_bc:
+        logger.warning(f'No configuration found or bad configuration for - {process_id} - in \'repeat\' definition. A random number will be generated')
         
     if wait_bc:
-        logger.warning(f'No configuration found or bad configuration for - {process_id} - in \'each\' definition. A random number will be generated')
+        logger.warning(f'No configuration found or bad configuration for - {process_id} - in \'wait\' definition. A random number will be generated')
     
-    repeat = randrange(60*2, 60*30) if each_bc else extras.get(const.SETTING_REPEAT_TK)
+    repeat = randrange(60*2, 60*30) if repeat_bc else extras.get(const.SETTING_REPEAT_TK)
     wait = randrange(0, 60*2) if wait_bc else extras.get(const.SETTING_WAIT_TK)
     
     if const.SETTING_REPEAT_TK in extras:
@@ -73,6 +67,8 @@ if __name__ == '__main__':
     executions = parser.executions();
     
     run_executions_list = []
+    
+    logger.info('Running')
     
     for process_type, process in executions:
         process_id, context = process.get(const.PROCESS_ID), process.get(const.PROCESS_CONTEXT)
