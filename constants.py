@@ -14,7 +14,14 @@ SETTINGS_FILE_NAME = 'settings.yaml'
 
 PROCESS_ID = 'process_id'
 
-PROCESS_SETTINGS = 'process_settings'
+PROCESS_CONTEXT = 'process_context'
+
+PROCESS_TYPE = 'process_type'
+
+PROCESS_WAIT = 'process_wait'
+
+PROCESS_REPEAT = 'process_repeat'
+
 
 
 # SETTING FILE IDENT TOKENS

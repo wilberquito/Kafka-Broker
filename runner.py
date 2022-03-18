@@ -1,6 +1,5 @@
 import datetime as dt
 import json
-from random import randrange
 from multiprocessing import Process
 import time
 import requests
@@ -14,8 +13,6 @@ import ftp_retriever as ftpret
 from yaml_parser.parser import Parser
 
 logger = logging.getLogger(const.APP_LOGGER_NAME)
-
-
 
 def charge_from_database(url: str, sql: str) -> str:
     """ Consumes database and maps to json """
@@ -61,13 +58,13 @@ def database_pipeline(url, sql, localId, consumer) -> list:
     json = charge_from_database(url, sql)
     map_and_send_to_consumer(json, localId, consumer)    
 
-def run(process_type: str, process_id: str, each: int, wait: int, extras: dict):
+def _run(process_type: str, process_id: str, repeat: int, wait: int, context: dict):
     """ Handles execution time and execution itself
     
-        When one key is not found inside extras, process ends because a bad configuration
+        When one key is not found inside context, process ends because a bad configuration
         or bad read parser configuration.
         
-        Constraints: each, wait >= 0
+        Constraints: repeat, wait >= 0
     """
     if wait > 0:
         logger.info(f'Process - {process_id} - will make it first execution in - {wait} - seconds')
@@ -80,9 +77,9 @@ def run(process_type: str, process_id: str, each: int, wait: int, extras: dict):
             
             match process_type:
                 case 'DATABASE':
-                    database_pipeline(**extras)
+                    database_pipeline(**context)
                 case 'FTP':
-                    ftp_pipeline(**extras)
+                    ftp_pipeline(**context)
                     
             execution_time = (dt.datetime.now() - start_time).total_seconds()*1000
             logger.info(f'From process - {process_id} - It took {execution_time} ms')
@@ -92,37 +89,20 @@ def run(process_type: str, process_id: str, each: int, wait: int, extras: dict):
         except Exception as err:
             logger.error(f'From process - {process_id} - unhandled exception')
             logger.error(err, exc_info=True)
-        time.sleep(each if each >= 0 else 0)
+        time.sleep(repeat if repeat >= 0 else 0)
         
 
-def start(execution_settings: list):
-    pass
-    
-if __name__ == '__main__':
-    parser = Parser('settings.yaml')
-    executions_list = parser.executions();
-    
-    all_processes = list()
-    db_processes, ftp_processes = 0, 0
-    
-    for execution_type, execution in executions_list:
-        process_id, settings = execution.get('process_id'), execution.get('settings')
-        each, wait, settings = compute_execution_times(process_id, settings)
-        settings = add_consumer_data(process_id, settings, parser)
-        match execution_type:
-            case const.DATABASE_TK:
-                db_processes += 1
-            case const.FTP_TK:
-                ftp_processes += 1
-            
-        p = Process(target=run, args=(execution_type, process_id, each, wait, settings,))
-        all_processes.append(p)
+def run(executions: list):
+    processes = []
+    for settings in executions:
+        process_type = settings[const.PROCESS_TYPE]
+        process_id = settings[const.PROCESS_ID]
+        repeat = settings[const.PROCESS_REPEAT]
+        wait = settings[const.PROCESS_WAIT]
+        context = settings[const.PROCESS_CONTEXT]
+        p = Process(target=_run, args=(process_type, process_id, repeat, wait, context,))
+        processes.append(p)
         p.start()
-  
-    print(f"""
-          Number of {const.DATABASE_TK} processes running {db_processes}
-          Number of {const.FTP_TK} processes running {ftp_processes}
-          """)
-    # Avoids kill main thred waiting child processors die
-    for p in all_processes:
+
+    for p in processes:
         p.join()

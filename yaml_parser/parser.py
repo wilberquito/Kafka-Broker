@@ -2,7 +2,7 @@ import logging
 from typing import List
 import yaml
 
-from constants import PROCESS_ID, PROCESS_SETTINGS, SETTING_API_TK, SETTING_CONSUMER_TK, DATABASE_TK, SETTING_DATABASES_TK, SETTING_DEFAULT_TK, SETTING_DEV_TK, SETTING_FTPS_TK, SETTING_EXECUTIONS_TK, SETTING_PASSWD_TK, SETTING_USER_TK
+from constants import PROCESS_CONTEXT, PROCESS_ID, SETTING_API_TK, SETTING_CONSUMER_TK, DATABASE_TK, SETTING_DATABASES_TK, SETTING_DEFAULT_TK, SETTING_DEV_TK, SETTING_FTPS_TK, SETTING_EXECUTIONS_TK, SETTING_PASSWD_TK, SETTING_USER_TK
 
 class Parser:
     # logging.basicConfig(filename='parser.log', format='%(asctime)s %(levelname)s [%(filename)s:%(lineno)s]  %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -111,10 +111,10 @@ class Parser:
             names: list = [] if processes_names is None else processes_names
             inner_result: list = []
             if process_type == SETTING_DATABASES_TK:
-                inner_result = [(DATABASE_TK,  { PROCESS_ID: name, PROCESS_SETTINGS: databases_settings.get(name) }) for name in names if name in databases_settings]
+                inner_result = [(DATABASE_TK,  { PROCESS_ID: name, PROCESS_CONTEXT: databases_settings.get(name) }) for name in names if name in databases_settings]
                 pass
             else:
-                inner_result = [('FTP', { PROCESS_ID: name, PROCESS_SETTINGS: excel_settings.get(name) }) for name in names if name in excel_settings]
+                inner_result = [('FTP', { PROCESS_ID: name, PROCESS_CONTEXT: excel_settings.get(name) }) for name in names if name in excel_settings]
             result = result + inner_result
        
         return result

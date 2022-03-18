@@ -5,6 +5,7 @@ from random import randrange
 
 from yaml_parser.parser import Parser
 import constants as const
+from runner import run
 
 def _self_log() -> str:
     now = datetime.now()
@@ -39,8 +40,7 @@ def match_consumer_data(conf: dict, consumer: dict) -> dict:
 
     return result
 
-
-def _compute_execution_times(process_id: str, extras: dict) -> tuple[int, int, dict]:
+def compute_execution_times(process_id: str, extras: dict) -> tuple[int, int, dict]:
     """ Returns configured time for `wait` & `each`. Mutates dictionary deleting them from it
     
     If default configuration is not found for each & wait, function will generate a random
@@ -57,7 +57,7 @@ def _compute_execution_times(process_id: str, extras: dict) -> tuple[int, int, d
     if wait_bc:
         logger.warning(f'No configuration found or bad configuration for - {process_id} - in \'each\' definition. A random number will be generated')
     
-    each = randrange(60*2, 60*30) if each_bc else extras.get(const.SETTING_REPEAT_TK)
+    repeat = randrange(60*2, 60*30) if each_bc else extras.get(const.SETTING_REPEAT_TK)
     wait = randrange(0, 60*2) if wait_bc else extras.get(const.SETTING_WAIT_TK)
     
     if const.SETTING_REPEAT_TK in extras:
@@ -65,21 +65,28 @@ def _compute_execution_times(process_id: str, extras: dict) -> tuple[int, int, d
     if const.SETTING_WAIT_TK in extras:
         extras.pop(const.SETTING_WAIT_TK)
         
-    return (each, wait, extras)
-
+    return (repeat, wait, extras)
 
 if __name__ == '__main__':
     parser = Parser(const.SETTINGS_FILE_NAME)
     consumer = parser.defaults()['consumer']
     executions = parser.executions();
     
-    runner_executions = []
+    run_executions_list = []
     
-    for ex_type, ex in executions:
-        process_id, conf = ex.get(const.PROCESS_ID), ex.get(const.PROCESS_SETTINGS)
-        conf = match_consumer_data(conf, consumer)
-        
-        print(conf)
+    for process_type, process in executions:
+        process_id, context = process.get(const.PROCESS_ID), process.get(const.PROCESS_CONTEXT)
+        context = match_consumer_data(context, consumer)
+        repeat, wait, context = compute_execution_times(process_id, context)
+        run_executions_list.append({
+            const.PROCESS_TYPE: process_type,
+            const.PROCESS_ID: process_id,
+            const.PROCESS_REPEAT: repeat,
+            const.PROCESS_WAIT: wait,
+            const.PROCESS_CONTEXT: context
+        })
+    run(run_executions_list)
+    print('Bye!')
         
     
     
