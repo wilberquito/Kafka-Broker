@@ -66,28 +66,24 @@ def _run(process_type: str, process_id: str, repeat: int, wait: int, context: di
         Constraints: repeat, wait >= 0
     """
     if wait > 0:
-        logger.info(f'Process - {process_id} - will make it first execution in - {wait} - seconds')
+        logger.info(f'Process - {process_id} - will make it first execution in {wait} seconds')
         time.sleep(wait)
         
     while True:
-        logger.info(f'From process - {process_id} - about to load data, wish me luck')
+        logger.info(f'Process - {process_id} - about to load data, wish me luck')
         try:
             start_time = dt.datetime.now()
-            
             match process_type:
                 case 'DATABASE':
                     database_pipeline(**context)
                 case 'FTP':
                     ftp_pipeline(**context)
-                    
             execution_time = (dt.datetime.now() - start_time).total_seconds()*1000
-            logger.info(f'From process - {process_id} - It took {execution_time} ms')
-        except rex.ConnectionError as err:
-            logger.warning(f'From process - {process_id} - problem sending data. I\'ll try next time')
-            logger.warning(err, exc_info=True)
-        except Exception as err:
-            logger.error(f'From process - {process_id} - unhandled exception')
-            logger.error(err, exc_info=True)
+            logger.info(f'Process - {process_id} - It took {execution_time} ms')
+        except rex.ConnectionError:
+            logger.warning(f'Process - {process_id} - problem sending data. I\'ll try next time')
+        except Exception:
+            logger.error(f'Process - {process_id} - unhandled exception')
         time.sleep(repeat if repeat >= 0 else 0)
         
 

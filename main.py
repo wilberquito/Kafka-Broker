@@ -61,28 +61,29 @@ def compute_execution_times(process_id: str, extras: dict) -> tuple[int, int, di
         
     return (repeat, wait, extras)
 
+def byebye():
+    logger.info('User requested shutdown...')
+    logger.info('Ready to exit, bye bye...')
+    
 if __name__ == '__main__':
-    parser = Parser(const.SETTINGS_FILE_NAME)
-    consumer = parser.defaults()['consumer']
-    executions = parser.executions();
-    
-    run_executions_list = []
-    
-    logger.info('Running')
-    
-    for process_type, process in executions:
-        process_id, context = process.get(const.PROCESS_ID), process.get(const.PROCESS_CONTEXT)
-        context = match_consumer_data(context, consumer)
-        repeat, wait, context = compute_execution_times(process_id, context)
-        run_executions_list.append({
-            const.PROCESS_TYPE: process_type,
-            const.PROCESS_ID: process_id,
-            const.PROCESS_REPEAT: repeat,
-            const.PROCESS_WAIT: wait,
-            const.PROCESS_CONTEXT: context
-        })
-    run(run_executions_list)
-    print('Bye!')
-        
+    try:
+        parser = Parser(const.SETTINGS_FILE_NAME)
+        consumer = parser.defaults()['consumer']
+        executions = parser.executions();
+        run_executions_list = []
+        for process_type, process in executions:
+            process_id, context = process.get(const.PROCESS_ID), process.get(const.PROCESS_CONTEXT)
+            context = match_consumer_data(context, consumer)
+            repeat, wait, context = compute_execution_times(process_id, context)
+            run_executions_list.append({
+                const.PROCESS_TYPE: process_type,
+                const.PROCESS_ID: process_id,
+                const.PROCESS_REPEAT: repeat,
+                const.PROCESS_WAIT: wait,
+                const.PROCESS_CONTEXT: context
+            })
+        run(run_executions_list)
+    except KeyboardInterrupt:
+        byebye()        
     
     
