@@ -15,9 +15,7 @@ ADD . /ihub-loader
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && \
-    apt-get -y install gcc mono-mcs libpq-dev
-
-RUN which pg_config
+    apt-get -y install gcc g++ mono-mcs libpq-dev unixodbc-dev
 
 RUN pip install -r requirements.txt
 
