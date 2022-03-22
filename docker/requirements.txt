@@ -1,7 +1,0 @@
-pyyaml
-SQLAlchemy
-psycopg2
-pandas
-requests
-pyodbc
-openpyxl
