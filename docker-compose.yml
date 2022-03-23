@@ -1,8 +1,8 @@
 version: "3.9"
 services:
   ihub-loader:
-    image: ihub-loader:0.0.2
+    image: ihub-loader:0.0.1
     container_name: dc-ihub-loader
     volumes: 
-      - C:/Projectes/Smart cities/test-ihub-loader-logs:/opt/ihub-loader/logs
-    restart: always
+      - C:/Projectes/Smart cities/ihub-loader-memory/logs:/opt/ihub-loader/logs
+      - C:/Projectes/Smart cities/ihub-loader-memory/settings.yaml:/opt/ihub-loader/settings.yaml
