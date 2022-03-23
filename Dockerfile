@@ -1,10 +1,10 @@
 FROM python:3.10-slim
 
 # Set application directory
-WORKDIR /ihub-loader
+WORKDIR /opt/ihub-loader
 
 # Copies current directory into the container at /ihub-loader
-COPY . /ihub-loader
+COPY . /opt/ihub-loader
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update && \
