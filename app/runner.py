@@ -82,8 +82,9 @@ def _run(process_type: str, process_id: str, repeat: int, wait: int, context: di
             logger.info(f'Process - {process_id} - It took {execution_time} ms')
         except rex.ConnectionError:
             logger.warning(f'Process - {process_id} - problem sending data. I\'ll try next time')
-        except Exception:
+        except Exception as err:
             logger.error(f'Process - {process_id} - unhandled exception')
+            logger.error(err, exc_info=True)
         time.sleep(repeat if repeat >= 0 else 0)
         
 
