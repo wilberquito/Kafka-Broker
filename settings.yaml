@@ -3,6 +3,7 @@ default:
   executions: # names of executions to run when the execution starts
     databases:
       - sf
+      - recittyCalonge
     ftps:
       - local
   consumer:
@@ -17,14 +18,14 @@ executions: # each process should has an unique name
       sql: SELECT * FROM contenidors_fcc_out
       connectorName: ReceiverTest1
       repeat: 5 # process executes every n seconds
-      wait: 2 # process waits for n seconds to it's first execution 
+      wait: 4 # process waits for n seconds to it's first execution 
       localId: gid
 
     recittyCalonge:
       url: mssql+pyodbc://sa:sa@SQL2017:1433/RecittyCalongeData?driver=ODBC+Driver+17+for+SQL+Server
       sql: select er.AA_IGM, er.AA_DES, er.AA_GEOM.STAsText() as GEOMETRY from E_RPARFIN er;
       connectorName: ReceiverTest1
-      repeat: 5
+      repeat: 10
       wait: 1
       localId: AA_IGM
   ftps:
@@ -33,8 +34,8 @@ executions: # each process should has an unique name
       user: fani
       passwd: 3icFWr9v
       filename: data.xlsx
-      repeat: 10
-      wait: 1
+      repeat: 20
+      wait: 10
       connectorName: ReceiverTest1
       localId: gid
 

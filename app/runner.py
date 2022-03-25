@@ -50,12 +50,21 @@ def _charge_from_ftp(user: str, passwd: str, host: str, filename: str, port:int 
     
 def ftp_pipeline(user: str, passwd: str, host: str, filename: str, localId: str, consumer: dict, port: int = 21):
     json = _charge_from_ftp(user, passwd, host, filename, port)
+    write_latest_charge(json, filename, host)
     map_and_send_to_consumer(json, localId, consumer)
         
 def database_pipeline(url, sql, localId, consumer) -> list:
     """ Consum data -> Map data -> Send data """
     json = charge_from_database(url, sql)
+    write_latest_charge(json, sql, url)
     map_and_send_to_consumer(json, localId, consumer)    
+    
+def write_latest_charge(value, request, source):
+    with open('latest-charge.txt', 'w+') as f:
+        f.write(f'Latest charge at:\n\t{dt.datetime.now()}\n')
+        f.write(f'From:\n\t{source}\n\n')
+        f.write(f'Request:\n\t{request}\n')
+        f.write(json.dumps(value, indent=2))
 
 def _run(process_type: str, process_id: str, repeat: int, wait: int, context: dict):
     """ Handles execution time and execution itself
