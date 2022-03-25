@@ -11,11 +11,11 @@ ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update \
     && apt-get -y install curl gnupg gcc g++ mono-mcs unixodbc-dev libpq-dev
 
-# Adds microsoft repository as certeficate server
+# Adds microsoft repository as certeficate repository server to download images
 RUN curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
     && curl https://packages.microsoft.com/config/debian/11/prod.list > /etc/apt/sources.list.d/mssql-release.list
 
-# ODBC driver. Supports SQL Serser
+# ODBC driver. Supports SQL Server
 # https://docs.microsoft.com/es-es/sql/connect/odbc/windows/system-requirements-installation-and-driver-files?view=sql-server-ver15
 RUN apt-get update \
     && ACCEPT_EULA=Y apt-get install -y msodbcsql17
