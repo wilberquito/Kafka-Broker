@@ -5,9 +5,9 @@ from yaml_parser.parser import Parser
 import constants as const
 from runner import run
 
-from loggerapp import logger_app
+from log import setup_custom_logger
 
-logger = logger_app()
+logger = setup_custom_logger()
 
 def match_consumer_data(conf: dict, consumer: dict) -> dict:
     """ Matches consumer configuration in default with
@@ -66,6 +66,7 @@ def byebye():
     logger.info('Ready to exit, bye bye...')
     
 if __name__ == '__main__':
+    logger.info('Starting app...')
     try:
         parser = Parser(const.SETTINGS_FILE_NAME)
         consumer = parser.defaults()['consumer']

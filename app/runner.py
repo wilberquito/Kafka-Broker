@@ -9,9 +9,9 @@ from sqlalchemy import create_engine
 import ftp_retriever as ftpret
 
 import constants as const
-from loggerapp import logger_app
+from log import setup_custom_logger
 
-logger = logger_app()
+logger = setup_custom_logger()
 
 def charge_from_database(url: str, sql: str) -> str:
     """ Consumes database and maps to json """
