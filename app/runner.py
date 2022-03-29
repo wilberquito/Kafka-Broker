@@ -16,7 +16,8 @@ logger = setup_custom_logger()
 def charge_from_database(url: str, sql: str) -> str:
     """ Consumes database and maps to json """
     engine = create_engine(url)
-    df = pd.read_sql_query(sql, con=engine)
+    con = engine.connect(close_with_result=True)
+    df = pd.read_sql_query(sql, con=con)
     return df.to_json(orient='records')
 
 def map_json_to_consumer_format(json_data: str, localId: str) -> list:

@@ -2,7 +2,6 @@ default:
   dev: true # usufull to know if we are in dev mode
   executions: # names of executions to run when the execution starts
     databases:
-      - sf
       - recittyCalonge
     ftps:
       - local
@@ -22,7 +21,7 @@ executions: # each process should has an unique name
       localId: gid
 
     recittyCalonge:
-      url: mssql+pyodbc://sa:sa@SQL2017:1433/RecittyCalongeData?driver=ODBC+Driver+17+for+SQL+Server
+      url: mssql://sa:sa@SQL2017:1433/RecittyCalongeData?driver=ODBC+Driver+17+for+SQL+Server
       sql: select er.AA_IGM, er.AA_DES, er.AA_GEOM.STAsText() as GEOMETRY from E_RPARFIN er;
       connectorName: ReceiverTest1
       repeat: 10
