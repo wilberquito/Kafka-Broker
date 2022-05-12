@@ -38,7 +38,7 @@ def send_to_consumer(user: str, passwd: str, api: str, message):
     headers = {'Content-Type': 'application/json', 'Accept':'application/json'}
     requests.post(api, auth=(user, passwd), data=json.dumps(message), headers=headers)
 
-def map_and_send_to_consumer(json: str, localId: str, consumer: dict):
+def map_and_send(json: str, localId: str, consumer: dict):
     """ Maps to the format that buffering api understands and then sends it """
     message: list = map_json_to_consumer_format(json, localId)
     kwards = consumer | { 'message': message }
@@ -52,22 +52,22 @@ def _charge_from_ftp(user: str, passwd: str, host: str, filename: str, port:int 
 def ftp_pipeline(user: str, passwd: str, host: str, filename: str, localId: str, consumer: dict, port: int = 21):
     json = _charge_from_ftp(user, passwd, host, filename, port)
     write_latest_charge(json, filename, host)
-    map_and_send_to_consumer(json, localId, consumer)
+    map_and_send(json, localId, consumer)
         
 def database_pipeline(url, sql, localId, consumer) -> list:
     """ Consum data -> Map data -> Send data """
     json = charge_from_database(url, sql)
     write_latest_charge(json, sql, url)
-    map_and_send_to_consumer(json, localId, consumer)    
+    map_and_send(json, localId, consumer)    
     
 def write_latest_charge(value, request, source):
     with open('latest-charge.txt', 'w+') as f:
         f.write(f'Latest charge at:\n\t{dt.datetime.now()}\n')
-        f.write(f'From:\n\t{source}\n\n')
-        f.write(f'Request:\n\t{request}\n')
-        f.write(json.dumps(value, indent=2))
+        f.write(f'From:\n\t{source}\n')
+        f.write(f'Request:\n\t{request}\n\n')
+        f.write(json.dumps(value, indent=4))
 
-def _run(process_type: str, process_id: str, repeat: int, wait: int, context: dict):
+def run_instance(process_type: str, process_id: str, repeat: int, wait: int, context: dict):
     """ Handles execution time and execution itself
     
         When one key is not found inside context, process ends because a bad configuration
@@ -80,33 +80,37 @@ def _run(process_type: str, process_id: str, repeat: int, wait: int, context: di
         time.sleep(wait)
         
     while True:
+        
         logger.info(f'Process - {process_id} - about to load data, wish me luck')
+        
         try:
             start_time = dt.datetime.now()
             match process_type:
-                case 'DATABASE':
+                case const.DATABASE_TK:
                     database_pipeline(**context)
-                case 'FTP':
+                case const.FTP_TK:
                     ftp_pipeline(**context)
             execution_time = (dt.datetime.now() - start_time).total_seconds()*1000
-            logger.info(f'Process - {process_id} - It took {execution_time} ms')
+            logger.info(f'Process - {process_id} - It took {execution_time} ms to charge and send')
         except rex.ConnectionError:
             logger.warning(f'Process - {process_id} - problem sending data. I\'ll try next time')
         except Exception as err:
             logger.error(f'Process - {process_id} - unhandled exception')
             logger.error(err, exc_info=True)
+            
         time.sleep(repeat if repeat >= 0 else 0)
         
 
 def run(executions: list):
     processes = []
+    
     for settings in executions:
         process_type = settings[const.PROCESS_TYPE]
         process_id = settings[const.PROCESS_ID]
         repeat = settings[const.PROCESS_REPEAT]
         wait = settings[const.PROCESS_WAIT]
         context = settings[const.PROCESS_CONTEXT]
-        p = Process(target=_run, args=(process_type, process_id, repeat, wait, context,))
+        p = Process(target=run_instance, args=(process_type, process_id, repeat, wait, context,))
         processes.append(p)
         p.start()
 
