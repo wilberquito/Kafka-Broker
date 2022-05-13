@@ -5,3 +5,5 @@ pandas
 requests
 pyodbc
 openpyxl
+kafka-python
+
