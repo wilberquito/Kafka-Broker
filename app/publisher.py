@@ -2,6 +2,7 @@
 from random import random
 import time
 import pandas as pd
+import json
 from kafka import KafkaProducer
 
 
@@ -17,14 +18,17 @@ def charge_from_database(url: str, sql: str) -> str:
     df = pd.read_sql_query(sql, con=con)
     return df.to_json(orient='records')
 
-def send(messages, **context):
+def send(message: str, **context):
     topic = context['topic']
     bootstrap_server = context['bootstrap_server']
 
     kafka_producer = KafkaProducer(bootstrap_servers=bootstrap_server)
     
-    for commit in messages:
-        future = kafka_producer.send(topic, commit)
+    loads = json.loads(message)
+
+    for commit in loads:
+        bytes_commit = bytes(json.dumps(commit), 'utf-8')
+        future = kafka_producer.send(topic, bytes_commit)
         _ = future.get(timeout=60)
 
 def database_pipeline(**context):
@@ -35,7 +39,6 @@ def database_pipeline(**context):
     send(captured, **context)
 
 def publish(id, context):
-    # set default values if any of this does not exist
     ty = context['type']
     repeat_each_seconds = context.get('repeat_each_seconds', (random() + 1) * 600)
 
