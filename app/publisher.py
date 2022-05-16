@@ -14,26 +14,30 @@ import settings_parser as parser
 logger = setup_custom_logger()
 
 def publish(id, context):
-    process_type = context['type']
-    repeat_each_seconds = context.get('repeat_each_seconds', (random() + 1) * 600)
+    process_type = context[parser.PROCESS_TYPE]
+    repeat_each_seconds = context.get(parser.REPEAT_EACH_SECONDS, (random() + 1) * 600)
 
     keepOn = True    
+    
+    try:
+        while keepOn:
+            
+            logger.info(f'Process - {id} - about to load data...')
+            
+            match process_type:
+                case parser.Connection.DATABASE.value:
+                    database_pipeline(**context)
+                case parser.Connection.FTP.value:
+                    ftp_pipeline(**context)
+                case _:
+                    print(f'None supported source type - {process_type}')
+                    keepOn = False
+            
+            if keepOn:
+                time.sleep(repeat_each_seconds)
 
-    while keepOn:
-        
-        logger.info(f'Process - {id} - about to load data...')
-        
-        match process_type:
-            case parser.Connection.DATABASE.value:
-                database_pipeline(**context)
-            case parser.Connection.FTP.value:
-                ftp_pipeline(**context)
-            case _:
-                print(f'None supported source type - {process_type}')
-                keepOn = False
-        
-        if keepOn:
-            time.sleep(repeat_each_seconds)
+    except Exception as e:
+        logger.exception(f'Raised exeption catched \n {e}')
 
 def database_pipeline(**context):
     sql = context[parser.DATABASE_SQL]
