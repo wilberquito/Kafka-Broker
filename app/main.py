@@ -2,21 +2,18 @@
 from importlib.metadata import metadata
 from multiprocessing.dummy import Process
 
-import constants as const
 import publisher
 from log import setup_custom_logger
-from yaml_parser.parser import Parser
+from settings_parser import SettingsParser
+
+import settings_parser as parser
 
 logger = setup_custom_logger()
-
-
-def byebye():
-    logger.info('User requested shutdown...')
     
 if __name__ == '__main__':
     logger.info('Starting app...')
 
-    parser = Parser(const.SETTINGS_FILE_NAME)
+    parser = SettingsParser(parser.SETTINGS_FILE_NAME)
     definitions = parser.get_definitions()
     processes = []
     
@@ -28,4 +25,5 @@ if __name__ == '__main__':
     for p in processes:
         p.join()
         
-    byebye()
+    logger.info('Broker loader shuts down...')
+
