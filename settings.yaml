@@ -1,8 +1,8 @@
-executions: # names of executions to run when the execution starts
+active_executions: # names of executions to run when the execution starts
     - excel-dev
     - calonge-dev
 
-definitions:
+executions:
   calonge-dev:
     type: database
     repeat_each_seconds: 5 # process executes every n seconds
@@ -10,7 +10,6 @@ definitions:
     bootstrap_server: 192.168.0.77:9094
     url: postgresql://calonge_inventory_u:v1gMNG1knv@192.168.0.77:5432/calonge
     sql: "select * from data.gbi_posiciones_vehiculos gpv limit 100;"
-
 
   excel-dev:
     type: ftp

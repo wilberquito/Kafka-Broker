@@ -14,10 +14,10 @@ if __name__ == '__main__':
     logger.info('Starting app...')
 
     parser = SettingsParser(parser.SETTINGS_FILE_NAME)
-    definitions = parser.get_definitions()
+    running_executions = parser.get_running_executions()
     processes = []
     
-    for name, metadata in definitions.items():
+    for name, metadata in running_executions.items():
         p = Process(target=publisher.publish, args=(name, metadata))
         processes.append(p)
         p.start()
