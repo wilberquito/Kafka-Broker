@@ -29,17 +29,17 @@ def publish(id, context):
                 case parser.Connection.FTP.value:
                     ftp_pipeline(**context)
                 case _:
-                    print(f'None supported source type - {process_type}')
+                    print(f'Unsupported source type - {process_type}')
                     keepOn = False
-
-            if keepOn:
-                time.sleep(repeat_each_seconds)
 
         except KeyError as e:
             logger.exception(f'Key setting not present in context:\n {e}')
             keepOn = False
         except Exception as e:
             logger.exception(f'Exception:\n {e}')
+    
+        if keepOn:
+            time.sleep(repeat_each_seconds)
 
 def database_pipeline(**context):
     sql = context[parser.DATABASE_SQL]
