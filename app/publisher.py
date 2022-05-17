@@ -19,9 +19,8 @@ def publish(id, context):
 
     keepOn = True    
     
-    try:
-        while keepOn:
-            
+    while keepOn:
+        try:
             logger.info(f'Process - {id} - about to load data...')
             
             match process_type:
@@ -32,12 +31,15 @@ def publish(id, context):
                 case _:
                     print(f'None supported source type - {process_type}')
                     keepOn = False
-            
+
             if keepOn:
                 time.sleep(repeat_each_seconds)
 
-    except Exception as e:
-        logger.exception(f'Raised exeption catched \n {e}')
+        except KeyError as e:
+            logger.exception(f'Key setting not present in context:\n {e}')
+            keepOn = False
+        except Exception as e:
+            logger.exception(f'Exception:\n {e}')
 
 def database_pipeline(**context):
     sql = context[parser.DATABASE_SQL]
