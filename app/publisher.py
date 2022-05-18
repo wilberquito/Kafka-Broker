@@ -14,7 +14,7 @@ import settings_parser as parser
 logger = setup_custom_logger()
 
 def publish(id, context):
-    process_type = context[parser.PROCESS_TYPE]
+    process_type = context.get(parser.PROCESS_TYPE)
     repeat_each_seconds = context.get(parser.REPEAT_EACH_SECONDS, (random() + 1) * 600)
 
     keepOn = True    
@@ -29,7 +29,7 @@ def publish(id, context):
                 case parser.Connection.FTP.value:
                     ftp_pipeline(**context)
                 case _:
-                    print(f'Unsupported source type - {process_type}')
+                    logger.info(f'Unsupported source type - {process_type}')
                     keepOn = False
 
         except KeyError as e:
