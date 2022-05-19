@@ -39,6 +39,7 @@ def publish(id, context):
             logger.exception(f'Exception:\n {e}')
     
         if keepOn:
+            logger.info(f'Process - {id} - is about to sleep for {repeat_each_seconds}s')
             time.sleep(repeat_each_seconds)
 
 def database_pipeline(**context):
@@ -46,7 +47,7 @@ def database_pipeline(**context):
     url = context[parser.DATABASE_URL]
     
     captured = charge_from_database(url, sql)
-    send(captured, **context)
+    send_async(captured, **context)
 
 def charge_from_database(url: str, sql: str) -> str:
     """ Consumes database and maps to json """
@@ -63,7 +64,7 @@ def ftp_pipeline(**context):
     port = context.get(parser.FTP_PORT, 21)
     
     captured = charge_from_ftp(file_name, host, password, user, port)
-    send(captured, **context)
+    send_async(captured, **context)
 
 def charge_from_ftp(file_name, host, password, user, port):
     btes = retrieve_bytes(file_name, host, password, user, port)
@@ -88,7 +89,26 @@ def send(message: str, **context):
             n_commited = n_commited + 1
         except Exception as _:
             str_commit = bytes_commit.decode('utf-8')
-            logger.info(f"Couldn't send - {str_commit}")
+            logger.warning(f"Couldn't send - {str_commit}")
 
     logger.info(f"Number of committed messages - {n_commited}")
+
+def send_async(message: str, **context):
+    topic = context[parser.KAFKA_TOPIC]
+    bootstrap_server = context[parser.KAFKA_BOOTSTRAP_SERVER]
+
+    producer = KafkaProducer(bootstrap_servers=bootstrap_server)
+    loads = json.loads(message)
     
+    logger.info(f"Number of messages to send {len(loads)}")
+
+    for commit in loads:
+        try:
+            bytes_commit = bytes(json.dumps(commit), 'utf-8')
+            producer.send(topic, bytes_commit).add_errback(on_send_error)
+        except Exception as _:
+            str_commit = bytes_commit.decode('utf-8')
+            logger.warning(f"Couldn't send - {str_commit}")
+
+def on_send_error(excp):
+    logger.error('I am an errback', exc_info=excp)
