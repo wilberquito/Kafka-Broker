@@ -76,17 +76,19 @@ def send(message: str, **context):
 
     kafka_producer = KafkaProducer(bootstrap_servers=bootstrap_server)
     loads = json.loads(message)
-    n = 0
+    n_commited = 0
+    
+    logger.info(f"Number of messages to send {len(loads)}")
 
     for commit in loads:
         try:
             bytes_commit = bytes(json.dumps(commit), 'utf-8')
             future = kafka_producer.send(topic, bytes_commit)
             _ = future.get(timeout=60)
-            n = n + 1
+            n_commited = n_commited + 1
         except Exception as _:
             str_commit = bytes_commit.decode('utf-8')
             logger.info(f"Couldn't send - {str_commit}")
 
-    logger.info(f"number of commit send - {n}")
+    logger.info(f"Number of committed messages - {n_commited}")
     
