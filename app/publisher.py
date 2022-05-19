@@ -104,7 +104,7 @@ def send_async(message: str, **context):
 
     for commit in loads:
         try:
-            bytes_commit = bytes(json.dumps(commit), 'utf-8')
+            bytes_commit = json.dumps(commit).encode('utf-8') 
             producer.send(topic, bytes_commit).add_errback(on_send_error)
         except Exception as _:
             str_commit = bytes_commit.decode('utf-8')
